@@ -128,6 +128,7 @@ public class Modelo {
             return true;
         } catch (IOException | NumberFormatException ex) {
             System.out.println("Arquivo " + nomeArquivo + " não foi possível ler.");
+            System.err.print("Concert exception caught: " + ex);
             return false;
         }
     }
@@ -242,7 +243,7 @@ public class Modelo {
                 System.out.println("Status = " + model.getStatus());
                 System.out.println("Value = " + model.getBestObjValue());
 
-                getRelatorioTurmas(model, X);
+                //getRelatorioTurmas(model, X);
                 //getRelatorioProfessores(model, X);
             } else {
                 System.out.println("A feasible solution may still be present, but IloCplex has not been able to prove its feasibility.");
@@ -253,28 +254,42 @@ public class Modelo {
     }
 
     private void getRelatorioTurmas(IloCplex model, IloNumVar[][][][] X) throws IloException {
-        for (int turma = 0; turma < quantidadeTurma; turma++) {
-            System.out.println(turmas.get(turma));
-            System.out.println("---------------------------------------------------------------------------------------------");
-            System.out.print("\t\t");
-            for (int dia = 0; dia < quantidadeDias; dia++) {
-                System.out.print(dias.get(dia) + "\t\t");
-            }
-            System.out.println("");
-            System.out.println("---------------------------------------------------------------------------------------------");
-            for (int horario = 0; horario < quantidadeHorario; horario++) {
-                System.out.print("|" + horarios.get(horario) + "\t");
+        try {
+            for (int turma = 0; turma < quantidadeTurma; turma++) {
+                String nomeArquivo = "turmas/" + turmas.get(turma) + ".txt";
+                FileWriter fileWriter = new FileWriter(new File(nomeArquivo));
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+                bufferedWriter.write(turmas.get(turma));
+                bufferedWriter.newLine();
+                bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                bufferedWriter.newLine();
+                bufferedWriter.write("\t\t");
                 for (int dia = 0; dia < quantidadeDias; dia++) {
-                    for (int professor = 0; professor < quantidadeProfessor; professor++) {
-                        if (model.getValue(X[dia][horario][turma][professor]) == 1.0) {
-                            System.out.print("|" + professores.get(professor) + "\t\t");
-                        }
-                    }
-                    System.out.print("");
+                    bufferedWriter.write(dias.get(dia) + "\t\t");
                 }
-                System.out.println("");
-                System.out.println("---------------------------------------------------------------------------------------------");
+                bufferedWriter.newLine();
+                bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                bufferedWriter.newLine();
+                for (int horario = 0; horario < quantidadeHorario; horario++) {
+                    bufferedWriter.write("|" + horarios.get(horario) + "\t");
+                    for (int dia = 0; dia < quantidadeDias; dia++) {
+                        for (int professor = 0; professor < quantidadeProfessor; professor++) {
+                            if (model.getValue(X[dia][horario][turma][professor]) == 1.0) {
+                                bufferedWriter.write("|" + professores.get(professor) + "\t\t");
+                            }
+                        }
+                        bufferedWriter.write("");
+                    }
+                    bufferedWriter.newLine();
+                    bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                    bufferedWriter.newLine();
+                }
+                bufferedWriter.flush();
+                bufferedWriter.close();
+                fileWriter.close();
             }
+        } catch (IOException ex) {
+            System.err.print("Concert exception caught: " + ex);
         }
     }
 
@@ -320,7 +335,7 @@ public class Modelo {
                 fileWriter.close();
             }
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            System.err.print("Concert exception caught: " + ex);
         }
     }
 
