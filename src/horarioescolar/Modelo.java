@@ -8,8 +8,10 @@ package horarioescolar;
 import ilog.concert.*;
 import ilog.cplex.*;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -174,7 +176,6 @@ public class Modelo {
                         }
                     }
                     model.addEq(expr, necessidade[professor][turma]);
-                    //model.addEq(expr, N[turma][professor]);
                 }
             }
             /**
@@ -185,6 +186,20 @@ public class Modelo {
                     for (int dia = 0; dia < quantidadeDias; dia++) {
                         IloLinearNumExpr expr = model.linearNumExpr();
                         for (int turma = 0; turma < quantidadeTurma; turma++) {
+                            expr.addTerm(1.0, X[dia][horario][turma][professor]);
+                        }
+                        model.addLe(expr, 1.0);
+                    }
+                }
+            }
+            /**
+             * Turma não pode ter o mesmo professor no mesmo dia e horario
+             */
+            for (int turma = 0; turma < quantidadeTurma; turma++) {
+                for (int horario = 0; horario < quantidadeHorario; horario++) {
+                    for (int dia = 0; dia < quantidadeDias; dia++) {
+                        IloLinearNumExpr expr = model.linearNumExpr();
+                        for (int professor = 0; professor < quantidadeProfessor; professor++) {
                             expr.addTerm(1.0, X[dia][horario][turma][professor]);
                         }
                         model.addLe(expr, 1.0);
@@ -227,26 +242,8 @@ public class Modelo {
                 System.out.println("Status = " + model.getStatus());
                 System.out.println("Value = " + model.getBestObjValue());
 
-                for (int i = 0; i < quantidadeTurma; i++) {
-                    System.out.println(turmas.get(i));
-                    System.out.println("");
-                    for (int j = 0; j < quantidadeDias; j++) {
-                        System.out.print("\t" + dias.get(j) + "\t");
-                    }
-                    System.out.println("");
-                    for (int k = 0; k < quantidadeHorario; k++) {
-                        System.out.print(horarios.get(k) + "\t");
-                        for (int j = 0; j < quantidadeDias; j++) {
-                            for (int l = 0; l < quantidadeProfessor; l++) {
-                                if (model.getValue(X[j][k][i][l]) == 1.0) {
-                                    System.out.print(professores.get(l) + "\t\t");
-                                }
-                            }
-                        }
-                        System.out.println("");
-                    }
-                    System.out.println("");
-                }
+                getRelatorioTurmas(model, X);
+                //getRelatorioProfessores(model, X);
             } else {
                 System.out.println("A feasible solution may still be present, but IloCplex has not been able to prove its feasibility.");
             }
@@ -255,33 +252,75 @@ public class Modelo {
         }
     }
 
-    private void getRelatorioProfessores(IloCplex model, IloNumVar[][][][] X) throws IloException {
-        for (int i = 0; i < quantidadeProfessor; i++) {
-            System.out.println(professores.get(i));
+    private void getRelatorioTurmas(IloCplex model, IloNumVar[][][][] X) throws IloException {
+        for (int turma = 0; turma < quantidadeTurma; turma++) {
+            System.out.println(turmas.get(turma));
             System.out.println("---------------------------------------------------------------------------------------------");
-            for (int j = 0; j < quantidadeTurma; j++) {
-                System.out.println(turmas.get(j));
-                System.out.println("---------------------------------------------------------------------------------------------");
-                System.out.print("\t");
-                for (int k = 0; k < quantidadeDias; k++) {
-                    System.out.print("\t" + dias.get(k) + "\t");
-                }
-                System.out.println("");
-                System.out.println("---------------------------------------------------------------------------------------------");
-                for (int l = 0; l < quantidadeHorario; l++) {
-                    System.out.print("|" + horarios.get(l) + "|\t");
-                    for (int k = 0; k < quantidadeDias; k++) {
-                        if (model.getValue(X[k][l][j][i]) == 1.0) {
-                            System.out.print("|" + professores.get(i) + "\t\t");
-                        } else {
-                            System.out.print("|\t\t");
+            System.out.print("\t\t");
+            for (int dia = 0; dia < quantidadeDias; dia++) {
+                System.out.print(dias.get(dia) + "\t\t");
+            }
+            System.out.println("");
+            System.out.println("---------------------------------------------------------------------------------------------");
+            for (int horario = 0; horario < quantidadeHorario; horario++) {
+                System.out.print("|" + horarios.get(horario) + "\t");
+                for (int dia = 0; dia < quantidadeDias; dia++) {
+                    for (int professor = 0; professor < quantidadeProfessor; professor++) {
+                        if (model.getValue(X[dia][horario][turma][professor]) == 1.0) {
+                            System.out.print("|" + professores.get(professor) + "\t\t");
                         }
                     }
-                    System.out.println("");
-                    System.out.println("---------------------------------------------------------------------------------------------");
+                    System.out.print("");
                 }
                 System.out.println("");
+                System.out.println("---------------------------------------------------------------------------------------------");
             }
+        }
+    }
+
+    private void getRelatorioProfessores(IloCplex model, IloNumVar[][][][] X) throws IloException {
+        try {
+            for (int professor = 0; professor < quantidadeProfessor; professor++) {
+                String nomeArquivo = "professores/" + professores.get(professor) + ".txt";
+                FileWriter fileWriter = new FileWriter(new File(nomeArquivo));
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+                bufferedWriter.write(professores.get(professor));
+                bufferedWriter.newLine();
+                bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                bufferedWriter.newLine();
+                for (int turma = 0; turma < quantidadeTurma; turma++) {
+                    bufferedWriter.write(turmas.get(turma));
+                    bufferedWriter.newLine();
+                    bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                    bufferedWriter.newLine();
+                    bufferedWriter.write("\t");
+                    for (int dia = 0; dia < quantidadeDias; dia++) {
+                        bufferedWriter.write("\t" + dias.get(dia) + "\t");
+                    }
+                    bufferedWriter.newLine();
+                    bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                    bufferedWriter.newLine();
+                    for (int horario = 0; horario < quantidadeHorario; horario++) {
+                        bufferedWriter.write("|" + horarios.get(horario) + "\t");
+                        for (int dia = 0; dia < quantidadeDias; dia++) {
+                            if (model.getValue(X[dia][horario][turma][professor]) == 1.0) {
+                                bufferedWriter.write("|" + professores.get(professor) + "\t\t");
+                            } else {
+                                bufferedWriter.write("|\t\t");
+                            }
+                        }
+                        bufferedWriter.newLine();
+                        bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                        bufferedWriter.newLine();
+                    }
+                    bufferedWriter.newLine();
+                }
+                bufferedWriter.flush();
+                bufferedWriter.close();
+                fileWriter.close();
+            }
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
         }
     }
 
