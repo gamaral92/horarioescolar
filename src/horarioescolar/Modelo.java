@@ -225,12 +225,63 @@ public class Modelo {
 
             if (model.solve()) {
                 System.out.println("Status = " + model.getStatus());
-                System.out.println("Vslue = " + model.getBestObjValue());
+                System.out.println("Value = " + model.getBestObjValue());
+
+                for (int i = 0; i < quantidadeTurma; i++) {
+                    System.out.println(turmas.get(i));
+                    System.out.println("");
+                    for (int j = 0; j < quantidadeDias; j++) {
+                        System.out.print("\t" + dias.get(j) + "\t");
+                    }
+                    System.out.println("");
+                    for (int k = 0; k < quantidadeHorario; k++) {
+                        System.out.print(horarios.get(k) + "\t");
+                        for (int j = 0; j < quantidadeDias; j++) {
+                            for (int l = 0; l < quantidadeProfessor; l++) {
+                                if (model.getValue(X[j][k][i][l]) == 1.0) {
+                                    System.out.print(professores.get(l) + "\t\t");
+                                }
+                            }
+                        }
+                        System.out.println("");
+                    }
+                    System.out.println("");
+                }
             } else {
                 System.out.println("A feasible solution may still be present, but IloCplex has not been able to prove its feasibility.");
             }
         } catch (IloException exception) {
             System.err.print("Concert exception caught: " + exception);
+        }
+    }
+
+    private void getRelatorioProfessores(IloCplex model, IloNumVar[][][][] X) throws IloException {
+        for (int i = 0; i < quantidadeProfessor; i++) {
+            System.out.println(professores.get(i));
+            System.out.println("---------------------------------------------------------------------------------------------");
+            for (int j = 0; j < quantidadeTurma; j++) {
+                System.out.println(turmas.get(j));
+                System.out.println("---------------------------------------------------------------------------------------------");
+                System.out.print("\t");
+                for (int k = 0; k < quantidadeDias; k++) {
+                    System.out.print("\t" + dias.get(k) + "\t");
+                }
+                System.out.println("");
+                System.out.println("---------------------------------------------------------------------------------------------");
+                for (int l = 0; l < quantidadeHorario; l++) {
+                    System.out.print("|" + horarios.get(l) + "|\t");
+                    for (int k = 0; k < quantidadeDias; k++) {
+                        if (model.getValue(X[k][l][j][i]) == 1.0) {
+                            System.out.print("|" + professores.get(i) + "\t\t");
+                        } else {
+                            System.out.print("|\t\t");
+                        }
+                    }
+                    System.out.println("");
+                    System.out.println("---------------------------------------------------------------------------------------------");
+                }
+                System.out.println("");
+            }
         }
     }
 
