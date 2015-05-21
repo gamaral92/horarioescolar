@@ -244,7 +244,7 @@ public class Modelo {
                 System.out.println("Value = " + model.getBestObjValue());
 
                 //getRelatorioTurmas(model, X);
-                //getRelatorioProfessores(model, X);
+                getRelatorioProfessores(model, X);
             } else {
                 System.out.println("A feasible solution may still be present, but IloCplex has not been able to prove its feasibility.");
             }
@@ -303,31 +303,27 @@ public class Modelo {
                 bufferedWriter.newLine();
                 bufferedWriter.write("---------------------------------------------------------------------------------------------");
                 bufferedWriter.newLine();
-                for (int turma = 0; turma < quantidadeTurma; turma++) {
-                    bufferedWriter.write(turmas.get(turma));
-                    bufferedWriter.newLine();
-                    bufferedWriter.write("---------------------------------------------------------------------------------------------");
-                    bufferedWriter.newLine();
-                    bufferedWriter.write("\t");
+                bufferedWriter.newLine();
+                bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                bufferedWriter.newLine();
+                bufferedWriter.write("\t");
+                for (int dia = 0; dia < quantidadeDias; dia++) {
+                    bufferedWriter.write("\t" + dias.get(dia) + "\t");
+                }
+                bufferedWriter.newLine();
+                bufferedWriter.write("---------------------------------------------------------------------------------------------");
+                bufferedWriter.newLine();
+                for (int horario = 0; horario < quantidadeHorario; horario++) {
+                    bufferedWriter.write("|" + horarios.get(horario) + "\t");
                     for (int dia = 0; dia < quantidadeDias; dia++) {
-                        bufferedWriter.write("\t" + dias.get(dia) + "\t");
-                    }
-                    bufferedWriter.newLine();
-                    bufferedWriter.write("---------------------------------------------------------------------------------------------");
-                    bufferedWriter.newLine();
-                    for (int horario = 0; horario < quantidadeHorario; horario++) {
-                        bufferedWriter.write("|" + horarios.get(horario) + "\t");
-                        for (int dia = 0; dia < quantidadeDias; dia++) {
+                        for (int turma = 0; turma < quantidadeTurma; turma++) {
                             if (model.getValue(X[dia][horario][turma][professor]) == 1.0) {
-                                bufferedWriter.write("|" + professores.get(professor) + "\t\t");
-                            } else {
-                                bufferedWriter.write("|\t\t");
+                                bufferedWriter.write("|" + turmas.get(turma) + "\t");
                             }
                         }
-                        bufferedWriter.newLine();
-                        bufferedWriter.write("---------------------------------------------------------------------------------------------");
-                        bufferedWriter.newLine();
                     }
+                    bufferedWriter.newLine();
+                    bufferedWriter.write("---------------------------------------------------------------------------------------------");
                     bufferedWriter.newLine();
                 }
                 bufferedWriter.flush();
