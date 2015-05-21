@@ -244,7 +244,7 @@ public class Modelo {
                 System.out.println("Value = " + model.getBestObjValue());
 
                 //getRelatorioTurmas(model, X);
-                getRelatorioProfessores(model, X);
+                //getRelatorioProfessores(model, X);
             } else {
                 System.out.println("A feasible solution may still be present, but IloCplex has not been able to prove its feasibility.");
             }
